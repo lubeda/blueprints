@@ -1,0 +1,59 @@
+blueprint:
+  name: Z2M HG06467 Animation Switcher
+  description: Change effect of a HG06467 light strip
+  domain: automation
+  input:
+    target_light:
+      name: The device of the light
+      description: select the device of the light strip
+      selector:
+        entity:
+          domain: light
+    effect_speed:
+      name: Effect speed
+      description: the effect speed 1..100
+      selector:
+        entity:
+          domain: input_number
+    effect_name:
+      name: Effect name
+      description: the name off the effect, e.g. "sparkles"
+      selector:
+        entity:
+          domain: input_select
+
+  trigger:
+    - platform: state
+      entity_id: !input effect_name
+    - platform: state
+      entity_id: !input effect_speed
+  condition: []
+  action:
+    - service: mqtt.publish
+      data:
+        topic: zigbee2mqtt/{{ !input taget_light.attributes:friendly_name }}/set
+        payload_template: |
+          {
+          "effect": {
+              "effect": "{{ states('!input effect_name') }}",
+              "speed": "{{ states('!input effect_speed') | int }}",
+              "colors": [
+                  {
+                      "r": 153,
+                      "g": 128,
+                      "b": 51
+                  },
+                  {
+                      "r": 120,
+                      "g": 0,
+                      "b": 0
+                  },
+                  {
+                      "r": 50,
+                      "g": 50,
+                      "b": 50
+                  }
+              ]
+          }
+          }
+  mode: single
